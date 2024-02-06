@@ -3,7 +3,6 @@ package com.example.demo.controller
 import com.example.demo.dto.PostCreateDto
 import com.example.demo.dto.PostDto
 import com.example.demo.dto.PostUpdateDto
-import com.example.demo.model.Post
 import com.example.demo.security.UserPrincipal
 import com.example.demo.service.PostService
 import org.springframework.http.ResponseEntity
@@ -15,10 +14,10 @@ import org.springframework.web.bind.annotation.*
 class PostController(private val postService: PostService) {
 
     @PostMapping
-    fun createPost(@AuthenticationPrincipal user: UserPrincipal, @RequestBody createPostRequest: PostCreateDto
-    ): ResponseEntity<Post> {
+    fun createPost(@AuthenticationPrincipal user: UserPrincipal,
+                   @RequestBody createPostRequest: PostCreateDto): ResponseEntity<PostDto> {
         val userId = user.id
-        val postDto = postService.createPost(createPostRequest, userId.toString())
+        val postDto = postService.createPost(createPostRequest, userId)
         return ResponseEntity.ok().body(postDto)
     }
 
@@ -31,9 +30,9 @@ class PostController(private val postService: PostService) {
     @PutMapping("/{postId}")
     fun updatePost(@AuthenticationPrincipal user: UserPrincipal, @PathVariable postId: Long,
                    @RequestBody updatePostRequest: PostUpdateDto
-    ): ResponseEntity<Post> {
+    ): ResponseEntity<PostDto> {
         val userId = user.id
-        val postDto = postService.updatePost(postId, updatePostRequest, userId.toString())
+        val postDto = postService.updatePost(postId, updatePostRequest, userId)
         return ResponseEntity.ok().body(postDto)
     }
 
@@ -46,7 +45,7 @@ class PostController(private val postService: PostService) {
     @DeleteMapping("/{postId}")
     fun deletePost(@AuthenticationPrincipal user: UserPrincipal, @PathVariable postId: Long): ResponseEntity<Void> {
         val userId = user.id
-        postService.deletePost(postId, userId.toString())
+        postService.deletePost(postId, userId)
         return ResponseEntity.noContent().build()
     }
 }

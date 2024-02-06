@@ -3,43 +3,34 @@ package com.example.demo.service
 import com.example.demo.dto.PostCreateDto
 import com.example.demo.dto.PostDto
 import com.example.demo.dto.PostUpdateDto
-import com.example.demo.jwt.JwtPlugin
 import com.example.demo.model.Post
 import com.example.demo.repository.MemberRepository
 import com.example.demo.repository.PostRepository
+import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 
 @Service
-class PostServiceImpl(
-    private val postRepository: PostRepository,
-    private val jwtPlugin: JwtPlugin,
-    private val memberRepository: MemberRepository
-): PostService {
-    override fun createPost(createPostRequest: PostCreateDto, token: String): Post {
-        // 토큰 검사
-        val nickName = jwtPlugin.validateToken(token)
+class PostServiceImpl(private val postRepository: PostRepository, private val memberRepository: MemberRepository) : PostService {
 
-        // 토큰에 담긴 닉네임으로 사용자 조회
-        val member = memberRepository.findByNickName(nickName.toString())
-            ?: throw IllegalArgumentException("유효하지 않은 사용자입니다.")
+    @Transactional
+    override fun createPost(createPostRequest: PostCreateDto, userId: Long): PostDto {
+        // 사용자 조회
+        val member = memberRepository.findById(userId)
+            .orElseThrow { IllegalArgumentException("유효하지 않은 사용자입니다.") }
 
-        // 제목과 내용의 길이 검사
-        if (createPostRequest.title.length > 500) {
-            throw IllegalArgumentException("제목은 500자를 초과할 수 없습니다.")
-        }
-
-        if (createPostRequest.content.length > 5000) {
-            throw IllegalArgumentException("내용은 5000자를 초과할 수 없습니다.")
-        }
-
-        // 게시글 작성
+        // 게시글 생성
         val post = Post(
             title = createPostRequest.title,
             nickname = member.nickName,
             content = createPostRequest.content,
+            userId = userId
         )
 
-        return postRepository.save(post)
+        // 게시글 저장
+        val savedPost = postRepository.save(post)
+
+        // 저장된 Post를 PostDto로 변환 후 반환
+        return PostDto.from(savedPost)
     }
 
     override fun getPost(postId: Long): PostDto {
@@ -54,20 +45,13 @@ class PostServiceImpl(
         return posts.map { PostDto.from(it) }
     }
 
-    override fun updatePost(postId: Long, updatePostRequest: PostUpdateDto, token: String): Post {
-        // 토큰 검사
-        val nickName = jwtPlugin.validateToken(token)
-
-        // 토큰에 담긴 닉네임으로 사용자 조회
-        val member = memberRepository.findByNickName(nickName.toString())
-            ?: throw IllegalArgumentException("유효하지 않은 사용자입니다.")
-
+    override fun updatePost(postId: Long, updatePostRequest: PostUpdateDto, userId: Long): PostDto {
         // 게시글 조회
         val post = postRepository.findById(postId)
-            .orElseThrow { IllegalArgumentException("해당 게시글이 존재하지 않습니다.") }
+            .orElseThrow { IllegalArgumentException("해당 id의 게시글이 존재하지 않습니다.") }
 
         // 사용자 검사
-        if (post.nickname != member.nickName) {
+        if (post.userId != userId) {
             throw IllegalArgumentException("본인이 작성한 게시글만 수정할 수 있습니다.")
         }
 
@@ -75,20 +59,21 @@ class PostServiceImpl(
         post.title = updatePostRequest.title
         post.content = updatePostRequest.content
 
-        return postRepository.save(post)
+        // 수정된 게시글 저장
+        val updatedPost = postRepository.save(post)
+
+        // 저장된 Post를 PostDto로 변환 후 반환
+        return PostDto.from(updatedPost)
     }
 
-    override fun deletePost(postId: Long, userId: Long) {
-        // 사용자 조회
-        val member = memberRepository.findById(userId)
-            ?: throw IllegalArgumentException("유효하지 않은 사용자입니다.")
 
+    override fun deletePost(postId: Long, userId: Long) {
         // 게시글 조회
         val post = postRepository.findById(postId)
             .orElseThrow { IllegalArgumentException("해당 게시글이 존재하지 않습니다.") }
 
         // 사용자 검사
-        if (post.nickname != member.nickName) {
+        if (post.userId != userId) {
             throw IllegalArgumentException("본인이 작성한 게시글만 삭제할 수 있습니다.")
         }
 

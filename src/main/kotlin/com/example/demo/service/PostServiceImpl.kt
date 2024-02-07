@@ -1,16 +1,22 @@
 package com.example.demo.service
 
+import com.example.demo.dto.CommentDto
 import com.example.demo.dto.PostCreateDto
 import com.example.demo.dto.PostDto
 import com.example.demo.dto.PostUpdateDto
 import com.example.demo.model.Post
+import com.example.demo.repository.CommentRepository
 import com.example.demo.repository.MemberRepository
 import com.example.demo.repository.PostRepository
 import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 
 @Service
-class PostServiceImpl(private val postRepository: PostRepository, private val memberRepository: MemberRepository) : PostService {
+class PostServiceImpl(
+    private val postRepository: PostRepository,
+    private val memberRepository: MemberRepository,
+    private val commentRepository: CommentRepository
+) : PostService {
 
     @Transactional
     override fun createPost(createPostRequest: PostCreateDto, userId: Long): PostDto {
@@ -36,8 +42,9 @@ class PostServiceImpl(private val postRepository: PostRepository, private val me
     override fun getPost(postId: Long): PostDto {
         val post = postRepository.findById(postId)
             .orElseThrow { IllegalArgumentException("해당 id의 게시글이 존재하지 않습니다.") }
-
-        return PostDto.from(post)
+        val comments = commentRepository.findByPostId(postId)  // postId에 해당하는 Comment 객체들을 조회
+        val commentDtos = comments.map { CommentDto.from(it) }  // Comment 객체들을 CommentDto로 변환
+        return PostDto.from(post, commentDtos)  // 변환된 CommentDto 리스트를 PostDto의 생성자에 전달
     }
 
     override fun getAllPosts(): List<PostDto> {

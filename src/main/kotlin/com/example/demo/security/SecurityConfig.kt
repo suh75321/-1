@@ -1,16 +1,13 @@
 package com.example.demo.security
 
 import com.example.demo.jwt.JwtAuthenticationFilter
-import org.springframework.boot.autoconfigure.security.reactive.PathRequest
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.http.HttpMethod
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.web.AuthenticationEntryPoint
 import org.springframework.security.web.SecurityFilterChain
-import org.springframework.security.web.access.AccessDeniedHandler
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 
 @Configuration
@@ -29,8 +26,8 @@ class SecurityConfig(
             .csrf { it.disable() }
             .authorizeHttpRequests {
                 it.requestMatchers(
-                    "/login",
-                    "/signup",
+                    "/api/members/login",
+                    "/api/members/signup",
                     "/swagger-ui/**",
                     "/v3/api-docs/**",
                 ).permitAll()

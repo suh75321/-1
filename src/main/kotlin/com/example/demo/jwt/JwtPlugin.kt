@@ -26,12 +26,12 @@ class JwtPlugin() {
         }
     }
 
-    fun generateAccessToken(nickName: String): String {
+    fun generateAccessToken(subject: String, nickName: String): String {
         val expirationPeriod: Long = Duration.ofHours(ACCESS_TOKEN_EXPIRATION_HOUR).toMillis()
-        return generateToken(nickName, expirationPeriod)
+        return generateToken(subject, nickName, expirationPeriod)
     }
 
-    private fun generateToken(nickName: String, expirationPeriod : Long): String {
+    private fun generateToken(subject: String, nickName: String, expirationPeriod : Long): String {
         val claims: Claims = Jwts.claims()
             .add(mapOf("nickName" to nickName))
             .build()
@@ -40,6 +40,7 @@ class JwtPlugin() {
         val now = Instant.now()
 
         return Jwts.builder()
+            .subject(subject)
             .issuer(ISSUER)
             .issuedAt(Date.from(now))
             .expiration(Date.from(now.plusMillis(expirationPeriod)))

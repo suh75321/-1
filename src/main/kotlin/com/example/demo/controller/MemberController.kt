@@ -4,8 +4,6 @@ import com.example.demo.dto.LoginRequest
 import com.example.demo.dto.SignUpRequest
 import com.example.demo.model.Member
 import com.example.demo.service.MemberService
-import jakarta.servlet.http.Cookie
-import jakarta.servlet.http.HttpServletResponse
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
@@ -25,15 +23,10 @@ class MemberController(
     }
 
     @PostMapping("/login")
-    fun login(@RequestBody loginRequest: LoginRequest, response: HttpServletResponse): ResponseEntity<Any> {
+    fun login(@RequestBody loginRequest: LoginRequest): ResponseEntity<Any> {
         return try {
-            val jwt = memberService.login(loginRequest)
-
-            val cookie = Cookie("jwt", jwt.toString())
-            cookie.isHttpOnly = true
-            response.addCookie(cookie)
-
-            ResponseEntity.ok().build()
+            val loginResponse = memberService.login(loginRequest)
+            ResponseEntity.ok().body(loginResponse)  // LoginResponse 객체를 HTTP 응답 본문에 담아 반환
         } catch (e: IllegalArgumentException) {
             ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.message)
         }

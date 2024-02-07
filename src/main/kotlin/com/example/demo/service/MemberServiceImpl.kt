@@ -1,6 +1,7 @@
 package com.example.demo.service
 
 import com.example.demo.dto.LoginRequest
+import com.example.demo.dto.LoginResponse
 import com.example.demo.dto.SignUpRequest
 import com.example.demo.jwt.JwtPlugin
 import com.example.demo.model.Member
@@ -29,7 +30,7 @@ class MemberServiceImpl(
         return memberRepository.save(newMember)
     }
 
-    override fun login(loginRequest: LoginRequest): String {
+    override fun login(loginRequest: LoginRequest): LoginResponse {
         val member = memberRepository.findByNickName(loginRequest.nickName)
             ?: throw IllegalArgumentException("닉네임 또는 패스워드를 확인해주세요.")
 
@@ -37,6 +38,11 @@ class MemberServiceImpl(
             throw IllegalArgumentException("닉네임 또는 패스워드를 확인해주세요.")
         }
 
-        return jwtPlugin.generateAccessToken(member.nickName)
+        return LoginResponse(
+            accessToken = jwtPlugin.generateAccessToken(
+                subject = member.id.toString(),  // 사용자의 ID를 subject로 사용
+                nickName = member.nickName  // 사용자의 닉네임을 nickName으로 사용
+            )
+        )
     }
 }

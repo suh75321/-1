@@ -6,12 +6,14 @@ import com.example.demo.dto.SignUpRequest
 import com.example.demo.jwt.JwtPlugin
 import com.example.demo.model.Member
 import com.example.demo.repository.MemberRepository
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 
 @Service
 class MemberServiceImpl(
     private val memberRepository: MemberRepository,
-    private val jwtPlugin: JwtPlugin
+    private val jwtPlugin: JwtPlugin,
+    private val passwordEncoder: PasswordEncoder
 ): MemberService {
     override fun signUp(signUpRequest: SignUpRequest): Member {
         if (signUpRequest.nickName == signUpRequest.password) {
@@ -25,6 +27,8 @@ class MemberServiceImpl(
         if (memberRepository.existsByNickName(signUpRequest.nickName)) {
             throw IllegalArgumentException("이미 존재하는 닉네임입니다.")
         }
+        val encodedPassword = passwordEncoder.encode(signUpRequest.password)
+
 
         val newMember = Member(nickName = signUpRequest.nickName, password = signUpRequest.password)
         return memberRepository.save(newMember)
@@ -44,5 +48,8 @@ class MemberServiceImpl(
                 nickName = member.nickName  // 사용자의 닉네임을 nickName으로 사용
             )
         )
+    }
+    override fun existsByNickName(nickname: String): Boolean {
+        return memberRepository.existsByNickName(nickname)
     }
 }

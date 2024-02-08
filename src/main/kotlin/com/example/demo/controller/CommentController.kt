@@ -5,18 +5,23 @@ import com.example.demo.dto.CommentDto
 import com.example.demo.dto.CommentUpdateDto
 import com.example.demo.security.UserPrincipal
 import com.example.demo.service.CommentService
+import com.example.demo.service.LikeServiceImpl
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/comments")
-class CommentController(private val commentService: CommentService) {
+class CommentController(
+    private val commentService: CommentService,
+    private val likeService: LikeServiceImpl
+) {
 
     @PostMapping
-    fun createComment(@AuthenticationPrincipal user: UserPrincipal, @RequestBody dto: CommentCreateDto): ResponseEntity<CommentDto> {
+    fun createCommentAndLikePost(@AuthenticationPrincipal user: UserPrincipal, @RequestBody dto: CommentCreateDto, @RequestParam postId: Long): ResponseEntity<CommentDto> {
         val userId = user.id
         val commentDto = commentService.createComment(userId, dto)
+        likeService.addLike(userId, postId)
         return ResponseEntity.ok(commentDto)
     }
 

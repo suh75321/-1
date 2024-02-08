@@ -5,14 +5,20 @@ import com.example.demo.dto.CommentDto
 import com.example.demo.dto.CommentUpdateDto
 import com.example.demo.model.Comment
 import com.example.demo.repository.CommentRepository
+import com.example.demo.repository.LikeRepository
 import com.example.demo.repository.PostRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import com.example.demo.model.Like
+import com.example.demo.repository.MemberRepository
+
 
 @Service
 class CommentServiceImpl(
     private val commentRepository: CommentRepository,
-    private val postRepository: PostRepository
+    private val postRepository: PostRepository,
+    private val likeRepository: LikeRepository,
+    private val memberRepository: MemberRepository
 ) : CommentService {
 
     @Transactional
@@ -26,8 +32,15 @@ class CommentServiceImpl(
             nickname = dto.nickname,
             content = dto.content
         )
-
         commentRepository.save(comment)
+
+        // 좋아요를 처리하는 로직
+        if (dto.isLike) {
+            val member = memberRepository.findById(userId).orElseThrow { IllegalArgumentException("Member not found") }
+            val post = postRepository.findById(dto.postId).orElseThrow { IllegalArgumentException("Post not found") }
+            val like = Like(member = member, post = post)
+            likeRepository.save(like)
+        }
 
         return CommentDto.from(comment)
     }

@@ -30,7 +30,7 @@ class MemberServiceImpl(
         val encodedPassword = passwordEncoder.encode(signUpRequest.password)
 
 
-        val newMember = Member(nickName = signUpRequest.nickName, password = encodedPassword) // 수정된 부분
+        val newMember = Member(nickName = signUpRequest.nickName, password = encodedPassword) // encodedPassword를 불러오게 수정된 부분
         return memberRepository.save(newMember)
     }
 

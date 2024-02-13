@@ -9,19 +9,17 @@ data class PostDto(
     val nickname: String,
     val content: String,
     val createdAt: LocalDateTime,
-    val userId: Long,
-    val comments: List<CommentDto>  // 이 부분을 추가
+    val memberId: Long, // "userId"를 "memberId"로 수정
 ) {
     companion object {
-        fun from(post: Post, comments: List<CommentDto> = listOf()): PostDto {
-            return PostDto(
+        fun from(post: Post): PostDto{
+        return PostDto(
                 id = post.id!!,
                 title = post.title,
                 nickname = post.nickname,
                 content = post.content,
                 createdAt = post.createdAt,
-                userId = post.userId,
-                comments = comments //여기도 추가
+                memberId = post.memberId,
             )
         }
     }

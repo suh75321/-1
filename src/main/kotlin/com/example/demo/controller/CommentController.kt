@@ -3,7 +3,7 @@ package com.example.demo.controller
 import com.example.demo.dto.CommentCreateDto
 import com.example.demo.dto.CommentDto
 import com.example.demo.dto.CommentUpdateDto
-import com.example.demo.security.UserPrincipal
+import com.example.demo.security.MemberPrincipal
 import com.example.demo.service.CommentService
 import com.example.demo.service.LikeServiceImpl
 import org.springframework.http.ResponseEntity
@@ -18,17 +18,17 @@ class CommentController(
 ) {
 
     @PostMapping
-    fun createCommentAndLikePost(@AuthenticationPrincipal user: UserPrincipal, @RequestBody dto: CommentCreateDto, @RequestParam postId: Long): ResponseEntity<CommentDto> {
-        val userId = user.id
-        val commentDto = commentService.createComment(userId, dto)
-        likeService.addLike(userId, postId)
+    fun createCommentAndLikePost(@AuthenticationPrincipal member: MemberPrincipal, @RequestBody dto: CommentCreateDto, @RequestParam postId: Long): ResponseEntity<CommentDto> {
+        val memberId = member.id
+        val commentDto = commentService.createComment(memberId, dto)
+        likeService.addLike(memberId, postId)
         return ResponseEntity.ok(commentDto)
     }
 
     @PutMapping("/{id}")
-    fun updateComment(@AuthenticationPrincipal user: UserPrincipal,@PathVariable id: Long, @RequestBody dto: CommentUpdateDto): ResponseEntity<CommentDto> {
-        val userId = user.id
-        val commentDto = commentService.updateComment(userId, id, dto)
+    fun updateComment(@AuthenticationPrincipal member: MemberPrincipal, @PathVariable id: Long, @RequestBody dto: CommentUpdateDto): ResponseEntity<CommentDto> {
+        val memberId = member.id
+        val commentDto = commentService.updateComment(memberId, id, dto)
         return ResponseEntity.ok(commentDto)
     }
 
@@ -39,9 +39,9 @@ class CommentController(
     }
 
     @DeleteMapping("/{id}")
-    fun deleteComment(@AuthenticationPrincipal user: UserPrincipal,@PathVariable id: Long): ResponseEntity<Unit> {
-        val userId = user.id
-        commentService.deleteComment(id, userId)
+    fun deleteComment(@AuthenticationPrincipal member: MemberPrincipal, @PathVariable id: Long): ResponseEntity<Unit> {
+        val memberId = member.id
+        commentService.deleteComment(id, memberId)
         return ResponseEntity.noContent().build()
     }
 }

@@ -22,13 +22,13 @@ class CommentServiceImpl(
 ) : CommentService {
 
     @Transactional
-    override fun createComment(userId: Long, dto: CommentCreateDto): CommentDto {
+    override fun createComment(memberId: Long, dto: CommentCreateDto): CommentDto {
         val post = postRepository.findById(dto.postId)
             .orElseThrow { IllegalArgumentException("Post not found") }
 
         val comment = Comment(
             post = post,
-            userId = userId,
+            userId = memberId,
             nickname = dto.nickname,
             content = dto.content
         )
@@ -36,7 +36,7 @@ class CommentServiceImpl(
 
         // 좋아요를 처리하는 로직
         if (dto.isLike) {
-            val member = memberRepository.findById(userId).orElseThrow { IllegalArgumentException("Member not found") }
+            val member = memberRepository.findById(memberId).orElseThrow { IllegalArgumentException("Member not found") }
             val post = postRepository.findById(dto.postId).orElseThrow { IllegalArgumentException("Post not found") }
             val like = Like(member = member, post = post)
             likeRepository.save(like)
@@ -46,8 +46,8 @@ class CommentServiceImpl(
     }
 
     @Transactional
-    override fun updateComment(id: Long, userId: Long, dto: CommentUpdateDto): CommentDto {
-        val comment = commentRepository.findByIdAndUserId(id, userId)
+    override fun updateComment(id: Long, memberId: Long, dto: CommentUpdateDto): CommentDto {
+        val comment = commentRepository.findByIdAndUserId(id, memberId)
             .orElseThrow { IllegalArgumentException("Comment not found or not owned by user") }
 
         comment.content = dto.content
@@ -64,10 +64,15 @@ class CommentServiceImpl(
     }
 
     @Transactional
-    override fun deleteComment(id: Long, userId: Long) {
-        val comment = commentRepository.findByIdAndUserId(id, userId)
+    override fun deleteComment(id: Long, memberId: Long) {
+        val comment = commentRepository.findByIdAndUserId(id, memberId)
             .orElseThrow { IllegalArgumentException("Comment not found or not owned by user") }
 
         commentRepository.deleteById(id)
+    }
+    @Transactional(readOnly = true)
+    override fun getCommentsByPostId(postId: Long): List<CommentDto> {
+        val comments = commentRepository.findAllByPostId(postId)
+        return comments.map { CommentDto.from(it) }
     }
 }

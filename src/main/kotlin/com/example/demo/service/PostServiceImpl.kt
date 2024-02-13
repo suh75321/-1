@@ -1,11 +1,9 @@
 package com.example.demo.service
 
-import com.example.demo.dto.CommentDto
 import com.example.demo.dto.PostCreateDto
 import com.example.demo.dto.PostDto
 import com.example.demo.dto.PostUpdateDto
 import com.example.demo.model.Post
-import com.example.demo.repository.CommentRepository
 import com.example.demo.repository.MemberRepository
 import com.example.demo.repository.PostRepository
 import jakarta.transaction.Transactional
@@ -15,13 +13,12 @@ import org.springframework.stereotype.Service
 class PostServiceImpl(
     private val postRepository: PostRepository,
     private val memberRepository: MemberRepository,
-    private val commentRepository: CommentRepository
 ) : PostService {
 
     @Transactional
-    override fun createPost(createPostRequest: PostCreateDto, userId: Long): PostDto {
+    override fun createPost(createPostRequest: PostCreateDto, memberId: Long): PostDto {
         // 사용자 조회
-        val member = memberRepository.findById(userId)
+        val member = memberRepository.findById(memberId)
             .orElseThrow { IllegalArgumentException("유효하지 않은 사용자입니다.") }
 
         // 게시글 생성
@@ -29,7 +26,7 @@ class PostServiceImpl(
             title = createPostRequest.title,
             nickname = member.nickName,
             content = createPostRequest.content,
-            userId = userId
+            memberId = memberId
         )
 
         // 게시글 저장
@@ -42,9 +39,7 @@ class PostServiceImpl(
     override fun getPost(postId: Long): PostDto {
         val post = postRepository.findById(postId)
             .orElseThrow { IllegalArgumentException("해당 id의 게시글이 존재하지 않습니다.") }
-        val comments = commentRepository.findByPostId(postId)  // postId에 해당하는 Comment 객체들을 조회
-        val commentDtos = comments.map { CommentDto.from(it) }  // Comment 객체들을 CommentDto로 변환
-        return PostDto.from(post, commentDtos)  // 변환된 CommentDto 리스트를 PostDto의 생성자에 전달
+        return PostDto.from(post) // 댓글 정보를 반환하는 부분을 제거
     }
 
     override fun getAllPosts(): List<PostDto> {
@@ -52,13 +47,13 @@ class PostServiceImpl(
         return posts.map { PostDto.from(it) }
     }
 
-    override fun updatePost(postId: Long, updatePostRequest: PostUpdateDto, userId: Long): PostDto {
+    override fun updatePost(postId: Long, updatePostRequest: PostUpdateDto, memberId: Long): PostDto {
         // 게시글 조회
         val post = postRepository.findById(postId)
             .orElseThrow { IllegalArgumentException("해당 id의 게시글이 존재하지 않습니다.") }
 
         // 사용자 검사
-        if (post.userId != userId) {
+        if (post.memberId != memberId) {
             throw IllegalArgumentException("본인이 작성한 게시글만 수정할 수 있습니다.")
         }
 
@@ -74,13 +69,13 @@ class PostServiceImpl(
     }
 
 
-    override fun deletePost(postId: Long, userId: Long) {
+    override fun deletePost(postId: Long, memberId: Long) {
         // 게시글 조회
         val post = postRepository.findById(postId)
             .orElseThrow { IllegalArgumentException("해당 게시글이 존재하지 않습니다.") }
 
         // 사용자 검사
-        if (post.userId != userId) {
+        if (post.memberId != memberId) {
             throw IllegalArgumentException("본인이 작성한 게시글만 삭제할 수 있습니다.")
         }
 

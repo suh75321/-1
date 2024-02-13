@@ -1,9 +1,11 @@
 package com.example.demo.controller
 
+import com.example.demo.dto.CommentDto
 import com.example.demo.dto.PostCreateDto
 import com.example.demo.dto.PostDto
 import com.example.demo.dto.PostUpdateDto
-import com.example.demo.security.UserPrincipal
+import com.example.demo.security.MemberPrincipal
+import com.example.demo.service.CommentServiceImpl
 import com.example.demo.service.PostService
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
@@ -11,13 +13,16 @@ import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/posts")
-class PostController(private val postService: PostService) {
+class PostController(
+    private val postService: PostService,
+    private val commentService: CommentServiceImpl
+) {
 
     @PostMapping
-    fun createPost(@AuthenticationPrincipal user: UserPrincipal,
+    fun createPost(@AuthenticationPrincipal member: MemberPrincipal,
                    @RequestBody createPostRequest: PostCreateDto): ResponseEntity<PostDto> {
-        val userId = user.id
-        val postDto = postService.createPost(createPostRequest, userId)
+        val memberId = member.id
+        val postDto = postService.createPost(createPostRequest, memberId)
         return ResponseEntity.ok().body(postDto)
     }
 
@@ -28,11 +33,11 @@ class PostController(private val postService: PostService) {
     }
 
     @PutMapping("/{postId}")
-    fun updatePost(@AuthenticationPrincipal user: UserPrincipal, @PathVariable postId: Long,
+    fun updatePost(@AuthenticationPrincipal member: MemberPrincipal, @PathVariable postId: Long,
                    @RequestBody updatePostRequest: PostUpdateDto
     ): ResponseEntity<PostDto> {
-        val userId = user.id
-        val postDto = postService.updatePost(postId, updatePostRequest, userId)
+        val memberId = member.id
+        val postDto = postService.updatePost(postId, updatePostRequest, memberId)
         return ResponseEntity.ok().body(postDto)
     }
 
@@ -43,9 +48,14 @@ class PostController(private val postService: PostService) {
     }
 
     @DeleteMapping("/{postId}")
-    fun deletePost(@AuthenticationPrincipal user: UserPrincipal, @PathVariable postId: Long): ResponseEntity<Void> {
-        val userId = user.id
-        postService.deletePost(postId, userId)
+    fun deletePost(@AuthenticationPrincipal member: MemberPrincipal, @PathVariable postId: Long): ResponseEntity<Void> {
+        val memberId = member.id
+        postService.deletePost(postId, memberId)
         return ResponseEntity.noContent().build()
+    }
+    @GetMapping("/{postId}/comments")
+    fun getCommentsByPost(@PathVariable postId: Long): ResponseEntity<List<CommentDto>> {
+        val commentDtos = commentService.getCommentsByPostId(postId)
+        return ResponseEntity.ok().body(commentDtos)
     }
 }

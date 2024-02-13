@@ -1,7 +1,7 @@
 package com.example.demo.jwt
 
 
-import com.example.demo.security.UserPrincipal
+import com.example.demo.security.MemberPrincipal
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -34,7 +34,7 @@ class JwtAuthenticationFilter(
                     val role = it.payload.get("role", String::class.java)
                     val nickName = it.payload.get("nickName", String::class.java)
 
-                    val principal = UserPrincipal(
+                    val principal = MemberPrincipal(
                         id = memberId,
                         nickName = nickName,
                         roles = setOf(role)

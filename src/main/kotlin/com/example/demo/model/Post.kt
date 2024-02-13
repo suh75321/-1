@@ -22,6 +22,6 @@ class Post(
     @Column(name = "created_at", nullable = false)
     var createdAt: LocalDateTime = LocalDateTime.now(),
 
-    @Column(name = "user_id", nullable = false)
-    var userId: Long
+    @Column(name = "member_id", nullable = false) // "user_id"를 "member_id"로 수정
+    var memberId: Long // "userId"를 "memberId"로 수정
 )

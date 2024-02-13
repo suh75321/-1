@@ -30,7 +30,7 @@ class MemberServiceImpl(
         val encodedPassword = passwordEncoder.encode(signUpRequest.password)
 
 
-        val newMember = Member(nickName = signUpRequest.nickName, password = signUpRequest.password)
+        val newMember = Member(nickName = signUpRequest.nickName, password = encodedPassword) // 수정된 부분
         return memberRepository.save(newMember)
     }
 
@@ -38,9 +38,9 @@ class MemberServiceImpl(
         val member = memberRepository.findByNickName(loginRequest.nickName)
             ?: throw IllegalArgumentException("닉네임 또는 패스워드를 확인해주세요.")
 
-        if (member.password != loginRequest.password) {
+        if (!passwordEncoder.matches(loginRequest.password, member.password)) {
             throw IllegalArgumentException("닉네임 또는 패스워드를 확인해주세요.")
-        }
+        }// 여기도 수정
 
         return LoginResponse(
             accessToken = jwtPlugin.generateAccessToken(
